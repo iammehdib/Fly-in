@@ -14,24 +14,17 @@ class Color(str, Enum):
     GREEN = "green"
     YELLOW = "yellow"
 
-@dataclass
-class Metadatas:
-    raw: str
-    zone: Zone = Zone.NORMAL
-    color: Color = Color.UNDEFINED
-    max_drones: int = 99999999999
-
 class Drone:
     name: str
     point: "Point" = None
 
 class Point:
 
-    def __init__(self, name: str, x: int, y: int, meta_datas: Metadatas):
+    def __init__(self, name: str, x: int, y: int, meta_datas: dict[str, str]):
         self.__name = name
-        self.x = x
-        self.y = y
-        self.meta_datas = meta_datas
+        self.x: int = x
+        self.y: int = y
+        self.__meta_datas: dict[str, str] = meta_datas
         self.__drones: set[Drone] = set()
         self.connections: list["Point"] = []
 
@@ -40,6 +33,9 @@ class Point:
 
     def get_drones(self) -> set[Drone]:
         return self.__drones
+
+    def get_metadata(self, key: str) -> str | None:
+        return self.__meta_datas.get(key)
 
     def add_drone(self, drone: Drone) -> None:
         self.__drones.add(drone)
