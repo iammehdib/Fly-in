@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import parse
 
 from map import Map
-from models import Point, Color, Zone
+from models import Point, Color, Zone, PointType
 
 
 @dataclass
@@ -33,12 +33,7 @@ class MapParsing:
         self.__drones_start_count: int = 0
         self.__current_line = None
 
-        try:
-            self.parse_file()
-        except MapParsingException as e:
-            print(e)
-        except BaseException as e:
-            print(f"Error in parsing file: {e}")
+        self.parse_file()
 
     def get_map(self):
         return self.__map
@@ -76,7 +71,7 @@ class MapParsing:
             value = self.__current_line.raw.split(":", 1)[1].strip()
             drone_count: int = int(value)
             self.__map.set_drone_count(drone_count)
-        except BaseException:
+        except:
             raise MapParsingException(self.__current_line, "Invalid nb_drones value")
 
     def parse_point(self):
@@ -87,22 +82,20 @@ class MapParsing:
             raise MapParsingException(self.__current_line, "Invalid hub line")
 
         # Check type is correct
-        type: str = result["type"]
-        if type not in ("start_hub", "hub", "end_hub"):
+        try:
+            point_type: PointType = PointType(result["type"])
+        except:
             raise MapParsingException(self.__current_line, "Invalid type value")
 
         # Check name is unique
         name: str = result["name"]
         for point in self.get_map().get_points():
-            if point == name:
+            if point.get_name() == name:
                 raise MapParsingException(self.__current_line, "The point name already exist")
 
         # Check x and y is correct and unique position
         x: int = result["x"]
         y: int = result["y"]
-        if 0 <= x and 0 <= y: # TODO: Check if is needed or not
-            raise MapParsingException(self.__current_line, "The x or/and y is negative")
-
         for point in self.get_map().get_points():
             if x == point.get_x() and y == point.get_y():
                 raise MapParsingException(self.__current_line, "The x or/and y is already set")
@@ -113,7 +106,7 @@ class MapParsing:
         # Add point to points list
         self.__map.add_point(
             Point(
-                type, x, y,
+                name, point_type, x, y,
                 zone, color, max_drones
             )
         )
@@ -125,39 +118,33 @@ class MapParsing:
 
         for meta_data in meta_datas_raw.split(" "):
             key, value = meta_data.split("=")
-            match key:
-                case "zone":
-                    try:
+            try:
+                match key:
+                    case "zone":
                         zone = Zone(value)
-                    except BaseException:
-                        raise MapParsingException(self.__current_line, f"'{value}' is not a valid Zone")
-                case "color":
-                    try:
+                    case "color":
                         color = Color(value)
-                    except BaseException:
-                        raise MapParsingException(self.__current_line, f"'{value}' is not a valid Color")
-                case "max_drones":
-                    try:
+                    case "max_drones":
                         max_drones = int(value)
-                    except BaseException:
-                        raise MapParsingException(self.__current_line, f"'{value}' is not a int")
-                case _:
-                    raise MapParsingException(self.__current_line, "The key of metadata is invalid")
+                    case _:
+                        raise MapParsingException(self.__current_line, f"{key} is not exist")
+            except:
+                raise MapParsingException(self.__current_line, f"'{key}={value}' is invalid")
 
         return zone, color, max_drones
 
     def parse_connection(self):
-        result = parse.parse("connection: {a}:{b} [max_link_capacity={max_link_capacity}]",
+        result = parse.parse("connection: {a}-{b} [max_link_capacity={max_link_capacity}]",
                              self.__current_line.raw)
         if result is None:
-            result = parse.parse("connection: {a}:{b}", self.__current_line.raw)
+            result = parse.parse("connection: {a}-{b}", self.__current_line.raw)
         if result is None:
             raise MapParsingException(self.__current_line, "Invalid connection")
 
         a = result["a"]
         b = result["b"]
-        point_a = self.__map.get_point(a)
-        point_b = self.__map.get_point(b)
+        point_a = self.__map.get_point_from_name(a)
+        point_b = self.__map.get_point_from_name(b)
 
         if point_a is None or point_b is None:
            raise MapParsingException(self.__current_line, "One of point name is not exist")
@@ -173,11 +160,13 @@ class MapParsing:
 
 
 if __name__ == "__main__":
-    map_parsing: MapParsing = MapParsing('./maps/easy/01_linear_path.txt')
-    map_parsing.parse_file()
+    map_parsing: MapParsing = MapParsing('./maps/challenger/01_the_impossible_dream.txt')
 
-    for point in map_parsing.get_map().get_points():
-        print(point.get_name())
+    for p in map_parsing.get_map().get_points():
+        print(p.get_type(), p.get_name(),
+              p.get_x(), p.get_y(),
+              p.get_color(), p.get_zone(), p.get_max_drones()
+        )
 
     map = map_parsing.get_map()
     map.start()

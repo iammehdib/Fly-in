@@ -1,4 +1,4 @@
-from models import Drone, Point
+from models import Drone, Point, PointType
 
 
 class MapException(Exception):
@@ -24,7 +24,7 @@ class Map:
 
             self.add_drone(Drone(drone_name))
 
-        start_point = self.get_point("start")  # TODO: To be confirmed is only start for the point name
+        start_point = self.get_point_from_type(PointType.START)
         if start_point is None:
             raise MapException("Could not find the start point")
 
@@ -46,8 +46,14 @@ class Map:
     def add_point(self, point: Point):
         self.__points.append(point)
 
-    def get_point(self, name: str) -> Point | None:
+    def get_point_from_name(self, name: str) -> Point | None:
         for point in self.get_points():
-            if name is point.get_name():
+            if name == point.get_name():
+                return point
+        return None
+
+    def get_point_from_type(self, point_type: PointType) -> Point | None:
+        for point in self.get_points():
+            if point_type == point.get_type():
                 return point
         return None

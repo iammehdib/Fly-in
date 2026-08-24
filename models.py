@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from enum import Enum
 
+class PointType(str, Enum):
+    START = "start_hub"
+    HUB = "hub"
+    END = "end_hub"
 
 class Zone(str, Enum):
     NORMAL = "normal"
@@ -12,8 +16,21 @@ class Color(str, Enum):
     BLACK = "black"
     GRAY = "gray"
     RED = "red"
+    DARK_RED = "darkred"
+    ORANGE = "orange"
     GREEN = "green"
+    LIME = "lime"
+    BLUE = "blue"
+    CYAN = "cyan"
+    PURPLE = "purple"
+    MAGENTA = "magenta"
+    VIOLET = "violet"
+    CRIMSON = "crimson"
+    RAINBOW = "rainbow"
+    BROWN = "brown"
+    MAROON = "maroon"
     YELLOW = "yellow"
+    GOLD = "gold"
     WHITE = "white"
 
 @dataclass(frozen=True)
@@ -22,8 +39,9 @@ class Drone:
 
 class Point:
 
-    def __init__(self, name: str, x: int, y: int, zone: Zone, color: Color, max_drones: int):
+    def __init__(self, name: str, point_type: PointType, x: int, y: int, zone: Zone, color: Color, max_drones: int):
         self.__name = name
+        self.__type = point_type
         self.__x: int = x
         self.__y: int = y
         self.__zone = zone
@@ -35,6 +53,9 @@ class Point:
 
     def get_name(self) -> str:
         return self.__name
+
+    def get_type(self) -> PointType:
+        return self.__type
 
     def get_x(self) -> int:
         return self.__x
