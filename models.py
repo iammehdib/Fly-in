@@ -8,22 +8,25 @@ class Zone(str, Enum):
     PRIORITY = "priority"
 
 class Color(str, Enum):
-    UNDEFINED = "wood"
+    BLACK = "black"
+    GRAY = "gray"
     RED = "red"
     GREEN = "green"
     YELLOW = "yellow"
+    WHITE = "white"
 
 class Drone:
     name: str
-    point: "Point" = None
 
 class Point:
 
-    def __init__(self, name: str, x: int, y: int, meta_datas: dict[str, str]):
+    def __init__(self, name: str, x: int, y: int, zone: Zone, color: Color, max_drones: int):
         self.__name = name
         self.__x: int = x
         self.__y: int = y
-        self.__meta_datas: dict[str, str] = meta_datas
+        self.__zone = zone
+        self.__color = color
+        self.__max_drones = max_drones
         self.__drones: set[Drone] = set()
         self.__connections: list["Point"] = []
         self.__max_link: dict["Point", int] = {}
@@ -40,8 +43,14 @@ class Point:
     def get_drones(self) -> set[Drone]:
         return self.__drones
 
-    def get_metadata(self, key: str) -> str | None:
-        return self.__meta_datas.get(key)
+    def get_zone(self) -> Zone:
+        return self.__zone
+
+    def get_color(self) -> Color:
+        return self.__color
+
+    def get_max_drones(self) -> int:
+        return self.__max_drones
 
     def add_drone(self, drone: Drone) -> None:
         self.__drones.add(drone)

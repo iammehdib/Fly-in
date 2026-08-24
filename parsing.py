@@ -1,9 +1,7 @@
 from dataclasses import dataclass
-from multiprocessing import pool
 
 import parse
 
-from utils import debug_log
 from models import Point, Color, Zone
 
 
@@ -110,41 +108,44 @@ class Map:
             if x == point.get_x() and y == point.get_y():
                 raise MapParsingException(self.current_line, "The x or/and y is already set")
 
+        # Parse metadata
+        zone, color, max_drones = self.parse_meta_datas(result.named.get("metadata", ""))
+
         # Add point to points list
         self.points.append(
             Point(
                 type, x, y,
-                self.parse_meta_datas(result.named.get("metadata", ""))
+                zone, color, max_drones
             )
         )
 
-    # TODO: Refactor this code and use Metadata class is better for readbility code
-    def parse_meta_datas(self, meta_datas_raw: str) -> dict[str, str]:
-        meta_datas: dict[str, str] = {}
+    def parse_meta_datas(self, meta_datas_raw: str) -> tuple[Zone, Color, int]:
+        zone: Zone = Zone.NORMAL # TODO: To be confirmed
+        color: Color = Color.GRAY # TODO: To be confirmed
+        max_drones: int = 1 # TODO: To be confirmed
 
         for meta_data in meta_datas_raw.split(" "):
-            key, value = meta_data.split(" ")
+            key, value = meta_data.split("=")
             match key:
-                case "color":
-                    try:
-                        Color(value)
-                    except Exception:
-                        raise MapParsingException(self.current_line, f"'{value}' is not a valid Color")
                 case "zone":
                     try:
-                        Zone(value)
+                        zone = Zone(value)
                     except Exception:
                         raise MapParsingException(self.current_line, f"'{value}' is not a valid Zone")
+                case "color":
+                    try:
+                        color = Color(value)
+                    except Exception:
+                        raise MapParsingException(self.current_line, f"'{value}' is not a valid Color")
                 case "max_drones":
                     try:
-                        int(value)
+                        max_drones = int(value)
                     except Exception:
                         raise MapParsingException(self.current_line, f"'{value}' is not a int")
                 case _:
                     raise MapParsingException(self.current_line, "The key of metadata is invalid")
 
-            meta_datas[key] = value
-        return meta_datas
+        return zone, color, max_drones
 
     def parse_connection(self):
         result = parse.parse("connection: {a}:{b} [max_link_capacity={max_link_capacity}]",
