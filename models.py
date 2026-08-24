@@ -16,7 +16,7 @@ class Color(str, Enum):
     YELLOW = "yellow"
     WHITE = "white"
 
-@dataclass
+@dataclass(frozen=True)
 class Drone:
     name: str
 
