@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -15,6 +16,7 @@ class Color(str, Enum):
     YELLOW = "yellow"
     WHITE = "white"
 
+@dataclass
 class Drone:
     name: str
 
