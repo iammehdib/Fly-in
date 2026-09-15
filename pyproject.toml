@@ -1,10 +1,22 @@
 [project]
 name = "fly-in"
-description = "Fly-in project for 42 Belgium School"
+description = "Fly-in project for 42 Belgium School: route a fleet of drones through a network of zones"
 version = "1.0.0"
 requires-python = ">=3.10"
 readme = "README.md"
-authors = ["mbuchet"]
+authors = [{ name = "mbuchet" }]
 dependencies = ["parse"]
 
+[project.optional-dependencies]
+dev = ["flake8", "mypy", "pytest"]
 
+[tool.mypy]
+exclude = ['/\.venv/']
+
+# ``parse`` ships type hints but no ``py.typed`` marker.
+[[tool.mypy.overrides]]
+module = "parse"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

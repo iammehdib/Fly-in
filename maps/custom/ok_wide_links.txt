@@ -1,0 +1,11 @@
+# Large capacities: every drone can move at the same time.
+nb_drones: 6
+
+start_hub: start 0 0 [color=green]
+hub: plaza 1 0 [color=cyan max_drones=6]
+hub: fast 2 0 [zone=priority color=lime max_drones=6]
+end_hub: goal 3 0 [color=gold]
+
+connection: start-plaza [max_link_capacity=6]
+connection: plaza-fast [max_link_capacity=6]
+connection: fast-goal [max_link_capacity=6]
