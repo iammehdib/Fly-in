@@ -1,5 +1,6 @@
-from dataclasses import dataclass
+import sys
 from enum import Enum
+
 
 class PointType(str, Enum):
     START = "start_hub"
@@ -12,7 +13,20 @@ class Zone(str, Enum):
     RESTRICTED = "restricted"
     PRIORITY = "priority"
 
+    @property
+    def turns(self) -> int:
+        return 2 if self is Zone.RESTRICTED else 1
+
+    @property
+    def preference(self) -> float:
+        return {Zone.PRIORITY: 1.0, Zone.NORMAL: 0.5}.get(self, 0.0)
+
+    @property
+    def is_passable(self) -> bool:
+        return self is not Zone.BLOCKED
+
 class Color(str, Enum):
+    UNDEFINED = "none"
     BLACK = "black"
     GRAY = "gray"
     RED = "red"
@@ -33,13 +47,88 @@ class Color(str, Enum):
     GOLD = "gold"
     WHITE = "white"
 
-@dataclass(frozen=True)
+    @property
+    def ansi(self) -> str:
+        color: str = "[38;2;"
+        if self is Color.BLACK:
+            color += "0;0;0m"
+        elif self is Color.GRAY:
+            color += "128;128;128m"
+        elif self is Color.RED:
+            color += "255;0;0m"
+        elif self is Color.DARK_RED:
+            color += "139;0;0m"
+        elif self is Color.ORANGE:
+            color += "255;165;0m"
+        elif self is Color.GREEN:
+            color += "0;160;0m"
+        elif self is Color.LIME:
+            color += "50;255;50m"
+        elif self is Color.BLUE:
+            color += "0;80;255m"
+        elif self is Color.CYAN:
+            color += "0;255;255m"
+        elif self is Color.PURPLE:
+            color += "128;0;128m"
+        elif self is Color.MAGENTA:
+            color += "255;0;255m"
+        elif self is Color.VIOLET:
+            color += "238;130;238m"
+        elif self is Color.CRIMSON:
+            color += "220;20;60m"
+        elif self is Color.BROWN:
+            color += "165;42;42m"
+        elif self is Color.MAROON:
+            color += "128;0;0m"
+        elif self is Color.YELLOW:
+            color += "255;255;0m"
+        elif self is Color.GOLD:
+            color += "255;215;0m"
+        elif self is Color.WHITE:
+            color += "255;255;255m"
+        else:
+            return ""
+        return color
+
+    def colorize(self, text: str) -> str:
+        if self is Color.RAINBOW:
+            return self.colorize_rainbow(text)
+        if self.ansi == "":
+            return text
+        return self.ansi + text + "[0m"
+
+    @staticmethod
+    def colorize_rainbow(text: str) -> str:
+        colors = [Color.RED, Color.ORANGE, Color.YELLOW,
+                  Color.LIME, Color.CYAN, Color.BLUE, Color.VIOLET]
+        result = ""
+        index = 0
+        for char in text:
+            color = colors[index % len(colors)]
+            result += color.colorize(char)
+            index += 1
+        return result
+
 class Drone:
-    name: str
+
+    def __init__(self, name: str):
+        self.__name = name
+        self.__point: "Point | None" = None
+
+    def get_name(self) -> str:
+        return self.__name
+
+    def get_point(self) -> "Point | None":
+        return self.__point
+
+    def set_point(self, new_point: "Point | None") -> None:
+        self.__point = new_point
 
 class Point:
 
-    def __init__(self, name: str, point_type: PointType, x: int, y: int, zone: Zone, color: Color, max_drones: int):
+    def __init__(self, name: str, point_type: PointType,
+                 x: int, y: int, zone: Zone,
+                 color: Color, max_drones: int) -> None:
         self.__name = name
         self.__type = point_type
         self.__x: int = x
@@ -72,33 +161,48 @@ class Point:
     def get_color(self) -> Color:
         return self.__color
 
+    def display_name(self) -> str:
+        return self.__color.colorize(self.__name)
+
     def get_max_drones(self) -> int:
         return self.__max_drones
 
+    def get_connections(self) -> list["Point"]:
+        return self.__connections
+
+    def free_slots(self) -> int:
+        if self.__type is not PointType.HUB:
+            return sys.maxsize
+        return self.__max_drones - len(self.__drones)
+
     def add_drone(self, drone: Drone) -> None:
-        self.__drones.add(drone)
+        previous = drone.get_point()
+        if previous is not None and previous is not self:
+            previous.remove_drone(drone)
+        self.get_drones().add(drone)
+        drone.set_point(self)
+
+    def add_drones(self, drones: list[Drone]) -> None:
+        for drone in drones:
+            self.add_drone(drone)
 
     def remove_drone(self, drone: Drone) -> None:
-        self.__drones.remove(drone)
+        self.get_drones().remove(drone)
+        drone.set_point(None)
 
-    def contain_drone(self, drone: Drone) -> bool:
-        return drone in self.__drones
+    def has_drone(self, drone: Drone) -> bool:
+        return drone in self.get_drones()
 
-    def is_contain_a_drones(self) -> bool:
-        return len(self.__drones) != 0
+    def has_drones(self) -> bool:
+        return bool(self.get_drones())
 
     def move_drone(self, next_point: "Point") -> bool:
-        if not self.contain_connection(next_point):
+        if not self.has_connection(next_point):
             return False
 
-        max_count: int = next_point.__max_link[next_point]
-        count: int = 0
-        for drone in list(self.get_drones()):
-            if max_count == count:
-                break
-            self.remove_drone(drone)
+        room = min(self.__max_link[next_point], next_point.free_slots())
+        for drone in list(self.get_drones())[:max(0, room)]:
             next_point.add_drone(drone)
-            count += 1
 
         return True
 
@@ -110,5 +214,5 @@ class Point:
         self.__connections.remove(point)
         self.__max_link.pop(point)
 
-    def contain_connection(self, point: "Point") -> bool:
+    def has_connection(self, point: "Point") -> bool:
         return point in self.__connections
