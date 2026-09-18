@@ -22,10 +22,45 @@ class Map:
     def add_round(self, add_round: int = 0) -> None:
         self.__round += add_round
 
-    def start(self) -> None:
-        if self.__drone_count == 0:
-            raise MapException("Can't start the map with 0 drone")
+    def validate(self) -> None:
+        """Check the rules that only make sense on the whole map.
 
+        Called once the file is fully parsed: none of these errors can
+        be attached to a particular line.
+        """
+        if self.get_drone_count() <= 0:
+            raise MapException("nb_drones must be a positive integer")
+        if self.count_type(PointType.START) != 1:
+            raise MapException("the map must have exactly one start_hub")
+        if self.count_type(PointType.END) != 1:
+            raise MapException("the map must have exactly one end_hub")
+        if not self.is_end_reachable():
+            raise MapException("the end hub cannot be reached "
+                               "from the start hub")
+
+    def is_end_reachable(self) -> bool:
+        """Return True when a path of passable zones joins start to end."""
+        start = self.get_point_from_type(PointType.START)
+        end = self.get_point_from_type(PointType.END)
+        if start is None or end is None:
+            return False
+
+        seen = {start}
+        queue = [start]
+        while queue:
+            point = queue.pop()
+            if point is end:
+                return True
+            for neighbor in point.get_connections():
+                if neighbor in seen:
+                    continue
+                if not neighbor.get_zone().is_passable:
+                    continue
+                seen.add(neighbor)
+                queue.append(neighbor)
+        return False
+
+    def start(self) -> None:
         start_point = self.get_point_from_type(PointType.START)
         if start_point is None:
             raise MapException("Could not find the start point")
@@ -33,10 +68,6 @@ class Map:
         for drone_suffix in range(self.__drone_count):
             drone_name = "drone" + str(drone_suffix)
             self.add_drone(Drone(drone_name))
-
-        end_point = self.get_point_from_type(PointType.END)
-        if end_point is None:
-            raise MapException("Could not find the start point")
 
         start_point.add_drones(self.__drones)
 
@@ -78,7 +109,7 @@ class Map:
     def get_points(self) -> list[Point]:
         return self.__points
 
-    def set_drone_count(self, drone_count: int):
+    def set_drone_count(self, drone_count: int) -> None:
         self.__drone_count = drone_count
 
     def get_drone_count(self) -> int:
@@ -101,3 +132,10 @@ class Map:
             if point_type == point.get_type():
                 return point
         return None
+
+    def count_type(self, point_type: PointType) -> int:
+        count: int = 0
+        for point in self.get_points():
+            if point_type == point.get_type():
+                count += 1
+        return count
