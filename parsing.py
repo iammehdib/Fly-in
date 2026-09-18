@@ -129,8 +129,12 @@ class MapParsing:
         color: Color = Color.UNDEFINED
         max_drones: int = 1 # TODO: To be confirmed
 
-        for meta_data in meta_datas_raw.split(" "):
-            key, value = meta_data.split("=")
+        for meta_data in meta_datas_raw.split():
+            if "=" not in meta_data:
+                raise MapParsingException(
+                    self.__current_line,
+                    f"'{meta_data}' is not a key=value pair")
+            key, value = meta_data.split("=", 1)
             try:
                 match key:
                     case "zone":
@@ -149,7 +153,7 @@ class MapParsing:
                         raise (MapParsingException
                                (self.__current_line,
                                 f"{key} is not exist"))
-            except:
+            except ValueError:
                 raise (MapParsingException
                        (self.__current_line, f"'{key}={value}' is invalid"))
 
