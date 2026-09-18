@@ -1,0 +1,9 @@
+# Tags in any order, capacity ignored on start/end, unknown color accepted.
+nb_drones: 2
+
+start_hub: start 0 0 [max_drones=1 color=green]
+hub: mid 1 0 [max_drones=2 zone=priority color=turquoise]
+end_hub: goal 2 0 [color=red max_drones=1 zone=normal]
+
+connection: start-mid [max_link_capacity=2]
+connection: mid-goal [max_link_capacity=2]

@@ -1,0 +1,16 @@
+# The direct route goes through a blocked zone and must be avoided.
+nb_drones: 3
+
+start_hub: start 0 0 [color=green]
+hub: shortcut 1 0 [zone=blocked color=gray]
+hub: detour1 0 1 [color=blue]
+hub: detour2 1 1 [color=blue]
+hub: detour3 2 1 [color=blue]
+end_hub: goal 2 0 [color=red]
+
+connection: start-shortcut
+connection: shortcut-goal
+connection: start-detour1
+connection: detour1-detour2
+connection: detour2-detour3
+connection: detour3-goal

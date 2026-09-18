@@ -1,0 +1,14 @@
+# Scalability: a lot of drones on a tiny map.
+nb_drones: 200
+
+start_hub: start 0 0 [color=green]
+hub: left 1 1 [color=blue max_drones=2]
+hub: right 1 -1 [color=blue max_drones=2]
+hub: merge 2 0 [color=yellow max_drones=4]
+end_hub: goal 3 0 [color=red]
+
+connection: start-left [max_link_capacity=2]
+connection: start-right [max_link_capacity=2]
+connection: left-merge [max_link_capacity=2]
+connection: right-merge [max_link_capacity=2]
+connection: merge-goal [max_link_capacity=4]

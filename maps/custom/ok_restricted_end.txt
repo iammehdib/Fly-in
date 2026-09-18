@@ -1,0 +1,9 @@
+# The end hub is restricted: the last move takes two turns.
+nb_drones: 3
+
+start_hub: base 0 0 [color=green]
+hub: relay 1 0 [color=blue max_drones=2]
+end_hub: bunker 2 0 [zone=restricted color=red]
+
+connection: base-relay [max_link_capacity=2]
+connection: relay-bunker [max_link_capacity=2]
