@@ -24,7 +24,7 @@ class MapParsingException(Exception):
 class MapParsing:
 
     ZONE_METADATA = ("zone", "color", "max_drones")
-    CONNECTION_METADATA = ("max_link_capacity")
+    CONNECTION_METADATA = ("max_link_capacity",)
     FORBIDDEN_IN_NAMES = "-[] \t"
 
     def __init__(self, path_file: str) -> None:
@@ -44,9 +44,9 @@ class MapParsing:
         try:
             with open(parse_file, 'r', encoding="utf-8") as file:
                 content = file.read()
-        except OSError as error:
+        except (OSError, UnicodeDecodeError) as error:
             raise MapException(f"cannot read '{parse_file}': "
-                               f"{error.strerror}") from error
+                               f"{error}") from error
 
         for number, line in enumerate(content.splitlines(), start=1):
             self.__current_line = MapLineParsing(" ".join(line.split()),
