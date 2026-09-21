@@ -5,7 +5,7 @@ class MapException(Exception):
 
     def __init__(self, reason: str) -> None:
         self.reason = reason
-        super().__init__(f"Error in Map: {reason}")
+        super().__init__(reason)
 
 
 class Map:

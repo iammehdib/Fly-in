@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-import parse
+import parse  # type: ignore[import-untyped]
 
 from map import Map, MapException
 from models import Point, Color, Zone, PointType
@@ -17,8 +17,8 @@ class MapParsingException(Exception):
     def __init__(self, line: MapLineParsing, reason: str) -> None:
         self.line = line
         self.reason = reason
-        super().__init__(f"Invalid line {line.line}: "
-                         f"{line.raw} — reason: {reason}")
+        super().__init__(f"invalid line {line.line} "
+                         f"'{line.raw}': {reason}")
 
 
 class MapParsing:
