@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-import parse  # type: ignore[import-untyped]
+import parse
 
 from map import Map, MapException
 from models import Point, Color, Zone, PointType

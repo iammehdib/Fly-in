@@ -8,3 +8,7 @@ authors = ["mbuchet"]
 dependencies = ["parse"]
 
 
+
+[[tool.mypy.overrides]]
+module = "parse.*"
+ignore_missing_imports = true
