@@ -19,7 +19,8 @@ class Map:
     def get_round(self) -> int:
         return self.__round
 
-    def add_round(self, add_round: int = 0) -> None:
+    def add_round(self, add_round: int = 1) -> None:
+        """Move the simulation clock forward."""
         self.__round += add_round
 
     def validate(self) -> None:
@@ -61,15 +62,28 @@ class Map:
         return False
 
     def start(self) -> None:
+        """Create the fleet and gather it in the start hub."""
         start_point = self.get_point_from_type(PointType.START)
         if start_point is None:
             raise MapException("Could not find the start point")
 
-        for drone_suffix in range(self.__drone_count):
-            drone_name = "drone" + str(drone_suffix)
+        for drone_name in range(1, self.__drone_count + 1):
             self.add_drone(Drone(drone_name))
 
         start_point.add_drones(self.__drones)
+
+    def link_usage(self, point_a: Point, point_b: Point) -> int:
+        """Count the drones currently flying on a connection.
+
+        Connections are stored on both of their zones, so the drones
+        themselves are the single source of truth for the occupancy
+        checked against max_link_capacity.
+        """
+        usage = 0
+        for drone in self.get_drones():
+            if drone.is_on_link(point_a, point_b):
+                usage += 1
+        return usage
 
     def find_paths(self, point: Point, end: Point,
                    path: list[Point]) -> list[list[Point]]:
