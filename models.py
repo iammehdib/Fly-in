@@ -24,11 +24,6 @@ class Zone(str, Enum):
         return 2 if self is Zone.RESTRICTED else 1
 
     @property
-    def preference(self) -> float:
-        """Return how much pathfinding should favour this kind of zone."""
-        return {Zone.PRIORITY: 1.0, Zone.NORMAL: 0.5}.get(self, 0.0)
-
-    @property
     def is_passable(self) -> bool:
         """Return True when a drone is allowed to enter the zone."""
         return self is not Zone.BLOCKED
@@ -141,9 +136,6 @@ class Drone:
         self.__transit_to: "Point | None" = None
         self.__transit_turns: int = 0
 
-    def get_id(self) -> int:
-        return self.__id
-
     def get_name(self) -> str:
         """Return the identifier used by the output format ('D1')."""
         return "D" + str(self.__id)
@@ -153,9 +145,6 @@ class Drone:
 
     def set_point(self, new_point: "Point | None") -> None:
         self.__point = new_point
-
-    def get_path(self) -> list["Point"]:
-        return list(self.__path)
 
     def set_path(self, path: list["Point"]) -> None:
         """Assign the route to follow, starting from the current zone."""
@@ -202,9 +191,6 @@ class Drone:
     def get_transit_to(self) -> "Point | None":
         return self.__transit_to
 
-    def get_transit_turns(self) -> int:
-        return self.__transit_turns
-
     def transit_tick(self) -> bool:
         """Spend one turn flying; True when the destination is reached."""
         if self.__transit_turns > 0:
@@ -228,21 +214,6 @@ class Drone:
         if self.__transit_from is point_a and self.__transit_to is point_b:
             return True
         return self.__transit_from is point_b and self.__transit_to is point_a
-
-    def link_name(self) -> str:
-        """Return '<origin>-<destination>', empty when not flying."""
-        if self.__transit_from is None or self.__transit_to is None:
-            return ""
-        return (self.__transit_from.get_name() + "-"
-                + self.__transit_to.get_name())
-
-    def display_position(self) -> str:
-        """Return what the output prints after 'D<ID>-' for this drone."""
-        if self.is_in_transit():
-            return self.link_name()
-        if self.__point is None:
-            return ""
-        return self.__point.get_name()
 
 
 class Point:
@@ -281,9 +252,6 @@ class Point:
     def get_zone(self) -> Zone:
         return self.__zone
 
-    def get_color(self) -> Color:
-        return self.__color
-
     def display_name(self) -> str:
         return self.__color.colorize(self.__name)
 
@@ -319,9 +287,6 @@ class Point:
         self.__incoming += 1
         return True
 
-    def get_reservations(self) -> int:
-        return self.__incoming
-
     def clear_reservations(self) -> None:
         """Drop the bookings left behind by an abandoned turn."""
         self.__incoming = 0
@@ -350,23 +315,10 @@ class Point:
         self.__drones.remove(drone)
         drone.set_point(None)
 
-    def has_drone(self, drone: Drone) -> bool:
-        return drone in self.__drones
-
-    def has_drones(self) -> bool:
-        return bool(self.__drones)
-
-    def count_drones(self) -> int:
-        return len(self.__drones)
-
     def add_connection(self, point: "Point",
                        max_link_capacity: int = 1) -> None:
         self.__connections.append(point)
         self.__max_link[point] = max_link_capacity
-
-    def remove_connection(self, point: "Point") -> None:
-        self.__connections.remove(point)
-        self.__max_link.pop(point)
 
     def has_connection(self, point: "Point") -> bool:
         return point in self.__connections
