@@ -4,7 +4,7 @@ description = "Fly-in project for 42 Belgium School"
 version = "1.0.0"
 requires-python = ">=3.10"
 readme = "README.md"
-authors = ["mbuchet"]
+authors = [{ name = "mbuchet" }]
 dependencies = ["parse"]
 
 
@@ -12,3 +12,7 @@ dependencies = ["parse"]
 [[tool.mypy.overrides]]
 module = "parse.*"
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
