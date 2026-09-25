@@ -4,7 +4,7 @@ MAP := maps/easy/01_linear_path.txt
 
 install:
 	uv venv
-	uv pip install parse flake8 mypy pytest
+	uv pip install parse flake8 mypy
 
 run:
 	uv run python main.py $(MAP)
@@ -21,4 +21,4 @@ lint-strict:
 	uv run mypy . --strict
 
 clean:
-	rm -rf __pycache__ tests/__pycache__ .mypy_cache .pytest_cache dist
+	rm -rf __pycache__ .mypy_cache dist
