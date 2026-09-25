@@ -1,28 +1,24 @@
-.PHONY: install run debug package lint lint-strict clean
+.PHONY: install run debug lint lint-strict clean
 
-VENV := .venv
+MAP := maps/easy/01_linear_path.txt
 
 install:
-	python3 -m venv $(VENV)
-	$(VENV)/bin/pip install --upgrade pip
-	$(VENV)/bin/pip install flake8 mypy build readchar rich blessed \
-		just-playback svgwrite
+	uv venv
+	uv pip install parse flake8 mypy pytest
 
 run:
-	$(VENV)/bin/python a_maze_ing.py config.txt
+	uv run python main.py $(MAP)
 
 debug:
-	$(VENV)/bin/python -m pdb a_maze_ing.py config.txt
+	uv run python -m pdb main.py $(MAP)
 
 lint:
-	$(VENV)/bin/flake8 . --exclude=$(VENV)
-	$(VENV)/bin/mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	uv run flake8 .
+	uv run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	$(VENV)/bin/flake8 . --exclude=$(VENV)
-	$(VENV)/bin/mypy . --strict
+	uv run flake8 .
+	uv run mypy . --strict
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +
-	rm -rf dist/
+	rm -rf __pycache__ tests/__pycache__ .mypy_cache .pytest_cache dist
