@@ -1,0 +1,18 @@
+# Two ways of the exact same cost: one through normal zones, declared
+# first, one through priority zones. The subject asks for the priority
+# one to be preferred, so the drone must fly through fast1 and fast2.
+nb_drones: 1
+
+start_hub: start 0 0 [color=green]
+hub: plain1 1 1 [zone=normal color=blue]
+hub: plain2 2 1 [zone=normal color=blue]
+hub: fast1 1 -1 [zone=priority color=cyan]
+hub: fast2 2 -1 [zone=priority color=cyan]
+end_hub: goal 3 0 [color=red]
+
+connection: start-plain1
+connection: plain1-plain2
+connection: plain2-goal
+connection: start-fast1
+connection: fast1-fast2
+connection: fast2-goal

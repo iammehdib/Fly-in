@@ -12,6 +12,7 @@ on purpose and must make the program stop with a clear error message
 | `ok_wide_links.txt` | Big capacities everywhere: many drones move on the same turn. |
 | `ok_many_drones.txt` | 200 drones on a tiny map (throughput and scalability). |
 | `ok_metadata_order.txt` | Metadata tags in any order, `max_drones` ignored on start/end, unknown color. |
+| `ok_priority_tie.txt` | Two ways of equal cost: the one through `priority` zones must be preferred. |
 | `err_no_drones.txt` | First line is not `nb_drones:`. |
 | `err_zero_drones.txt` | `nb_drones: 0` is not a positive integer. |
 | `err_two_starts.txt` | Two `start_hub:` lines. |
