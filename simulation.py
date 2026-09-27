@@ -12,6 +12,7 @@ class Simulation:
     """
 
     def __init__(self, map: Map) -> None:
+        """Start a simulation on a map, before its first turn."""
         self.__map = map
         # State of the turn being played: the drones that landed during
         # it, and how many drones used each connection.
@@ -19,6 +20,7 @@ class Simulation:
         self.__crossings: dict[tuple[str, str], int] = {}
 
     def get_map(self) -> Map:
+        """Return the map the fleet flies on."""
         return self.__map
 
     def run(self) -> list[str]:

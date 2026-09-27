@@ -2,21 +2,31 @@ from models import Drone, Point, PointType
 
 
 class MapException(Exception):
+    """An error about the map as a whole, with no line to blame."""
 
     def __init__(self, reason: str) -> None:
+        """Keep the reason, so a caller can report it as it is."""
         self.reason = reason
         super().__init__(reason)
 
 
 class Map:
+    """The network of zones, the fleet flying in it and its clock.
+
+    The map owns every zone and every drone: the parser fills it, the
+    scheduler reads it to plan the routes, and the simulation moves the
+    drones inside it.
+    """
 
     def __init__(self) -> None:
+        """Start an empty map, with no zone and no drone."""
         self.__drones: list[Drone] = []
         self.__points: list[Point] = []
         self.__drone_count: int = 0
         self.__round = 0
 
     def get_round(self) -> int:
+        """Return how many turns have been played so far."""
         return self.__round
 
     def add_round_and_get(self, add_round: int = 1) -> int:
@@ -88,6 +98,11 @@ class Map:
 
     def find_paths(self, point: Point, end: Point,
                    path: list[Point]) -> list[list[Point]]:
+        """Return every route from a zone to the end hub.
+
+        Depth-first search: a zone already in the path is skipped, so no
+        route ever loops, and a blocked zone is never entered.
+        """
         if point is end:
             return [path]
 
@@ -105,12 +120,18 @@ class Map:
 
     @staticmethod
     def path_cost(path: list[Point]) -> int:
+        """Return how many turns flying a whole path takes.
+
+        The start hub is left out: a drone is already there, only the
+        zones it enters cost turns.
+        """
         cost = 0
         for point in path[1:]:
             cost += point.get_zone().turns
         return cost
 
     def solve(self) -> list[list[Point]]:
+        """Return every route from the start hub, cheapest first."""
         start = self.get_point_from_type(PointType.START)
         end = self.get_point_from_type(PointType.END)
         if start is None or end is None:
@@ -119,36 +140,45 @@ class Map:
         return sorted(self.find_paths(start, end, [start]), key=self.path_cost)
 
     def get_drones(self) -> list[Drone]:
+        """Return the fleet."""
         return self.__drones
 
     def get_points(self) -> list[Point]:
+        """Return every zone of the map."""
         return self.__points
 
     def set_drone_count(self, drone_count: int) -> None:
+        """Record how many drones the map file asks for."""
         self.__drone_count = drone_count
 
     def get_drone_count(self) -> int:
+        """Return how many drones the map file asks for."""
         return self.__drone_count
 
     def add_drone(self, drone: Drone) -> None:
+        """Add a drone to the fleet."""
         self.__drones.append(drone)
 
     def add_point(self, point: Point) -> None:
+        """Add a zone to the map."""
         self.__points.append(point)
 
     def get_point_from_name(self, name: str) -> Point | None:
+        """Return the zone with that name, None when unknown."""
         for point in self.get_points():
             if name == point.get_name():
                 return point
         return None
 
     def get_point_from_type(self, point_type: PointType) -> Point | None:
+        """Return the first zone of that kind, None when there is none."""
         for point in self.get_points():
             if point_type == point.get_type():
                 return point
         return None
 
     def count_type(self, point_type: PointType) -> int:
+        """Return how many zones of that kind the map holds."""
         count: int = 0
         for point in self.get_points():
             if point_type == point.get_type():

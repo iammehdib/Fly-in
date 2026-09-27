@@ -128,6 +128,7 @@ class Drone:
     """
 
     def __init__(self, drone_id: int) -> None:
+        """Create a drone, outside of any zone and with no route yet."""
         self.__id = drone_id
         self.__point: "Point | None" = None
         self.__path: list["Point"] = []
@@ -141,9 +142,11 @@ class Drone:
         return "D" + str(self.__id)
 
     def get_point(self) -> "Point | None":
+        """Return the zone holding the drone, None while it flies."""
         return self.__point
 
     def set_point(self, new_point: "Point | None") -> None:
+        """Record the zone holding the drone, None while it flies."""
         self.__point = new_point
 
     def set_path(self, path: list["Point"]) -> None:
@@ -152,6 +155,7 @@ class Drone:
         self.__step = 0
 
     def get_step(self) -> int:
+        """Return how far along its route the drone has come."""
         return self.__step
 
     def next_point(self) -> "Point | None":
@@ -183,12 +187,15 @@ class Drone:
         self.__transit_turns = turns
 
     def is_in_transit(self) -> bool:
+        """Return True while the drone flies on a connection."""
         return self.__transit_to is not None
 
     def get_transit_from(self) -> "Point | None":
+        """Return the zone the drone took off from, if it is flying."""
         return self.__transit_from
 
     def get_transit_to(self) -> "Point | None":
+        """Return the zone the drone is flying to, if it is flying."""
         return self.__transit_to
 
     def transit_tick(self) -> bool:
@@ -222,6 +229,7 @@ class Point:
     def __init__(self, name: str, point_type: PointType,
                  x: int, y: int, zone: Zone,
                  color: Color, max_drones: int) -> None:
+        """Create an empty zone from what its map line declares."""
         self.__name = name
         self.__type = point_type
         self.__x: int = x
@@ -235,30 +243,39 @@ class Point:
         self.__incoming: int = 0
 
     def get_name(self) -> str:
+        """Return the name the map file gives to the zone."""
         return self.__name
 
     def get_type(self) -> PointType:
+        """Return whether the zone is the start, the end or a hub."""
         return self.__type
 
     def get_x(self) -> int:
+        """Return the horizontal coordinate of the zone."""
         return self.__x
 
     def get_y(self) -> int:
+        """Return the vertical coordinate of the zone."""
         return self.__y
 
     def get_drones(self) -> list[Drone]:
+        """Return the drones standing in the zone."""
         return list(self.__drones)
 
     def get_zone(self) -> Zone:
+        """Return the kind of the zone, which drives its cost."""
         return self.__zone
 
     def display_name(self) -> str:
+        """Return the name of the zone, painted in its own color."""
         return self.__color.colorize(self.__name)
 
     def get_max_drones(self) -> int:
+        """Return how many drones the zone can hold at once."""
         return self.__max_drones
 
     def get_connections(self) -> list["Point"]:
+        """Return the zones this one is linked to."""
         return list(self.__connections)
 
     def entry_cost(self) -> int:
@@ -305,6 +322,7 @@ class Point:
         drone.set_point(self)
 
     def add_drones(self, drones: list[Drone]) -> None:
+        """Put a whole group of drones in this zone."""
         for drone in drones:
             self.add_drone(drone)
 
@@ -317,10 +335,16 @@ class Point:
 
     def add_connection(self, point: "Point",
                        max_link_capacity: int = 1) -> None:
+        """Link this zone to another one, one way.
+
+        The parser calls it on both zones, since a connection of the map
+        file goes both ways.
+        """
         self.__connections.append(point)
         self.__max_link[point] = max_link_capacity
 
     def has_connection(self, point: "Point") -> bool:
+        """Return True when a connection joins this zone to another."""
         return point in self.__connections
 
     def get_link_capacity(self, point: "Point") -> int:

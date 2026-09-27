@@ -10,12 +10,14 @@ class Scheduler:
     """
 
     def __init__(self, map: Map) -> None:
+        """Start a scheduler on a map, with nothing booked yet."""
         self.__map = map
         # Slots the routes kept so far have already booked.
         self.__zone_load: dict[str, int] = {}
         self.__link_load: dict[tuple[str, str], int] = {}
 
     def get_map(self) -> Map:
+        """Return the map the routes are planned on."""
         return self.__map
 
     def plan(self) -> None:

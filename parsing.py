@@ -8,13 +8,17 @@ from models import Point, Color, Zone, PointType
 
 @dataclass
 class MapLineParsing:
+    """One line of the map file: its cleaned text and its number."""
+
     raw: str
     line: int
 
 
 class MapParsingException(Exception):
+    """An error a single line of the map file is responsible for."""
 
     def __init__(self, line: MapLineParsing, reason: str) -> None:
+        """Build a message naming the line, its text and the reason."""
         self.line = line
         self.reason = reason
         super().__init__(f"invalid line {line.line} "
@@ -22,18 +26,27 @@ class MapParsingException(Exception):
 
 
 class MapParsing:
+    """Read a map file and build the map it describes.
+
+    Parsing and validation happen together, line by line: everything a
+    single line can get wrong is refused here, with its number and its
+    cause. What only the finished map can tell is left to
+    Map.validate().
+    """
 
     ZONE_METADATA = ("zone", "color", "max_drones")
     CONNECTION_METADATA = ("max_link_capacity",)
     FORBIDDEN_IN_NAMES = "-[] \t"
 
     def __init__(self, path_file: str) -> None:
+        """Read the file at once, so a built parser holds a valid map."""
         self.__map = Map()
         self.__drones_defined: bool = False
         self.__current_line = MapLineParsing("", 0)
         self.parse_file(path_file)
 
     def get_map(self) -> Map:
+        """Return the map read from the file."""
         return self.__map
 
     def error(self, reason: str) -> MapParsingException:
@@ -41,6 +54,11 @@ class MapParsing:
         return MapParsingException(self.__current_line, reason)
 
     def parse_file(self, parse_file: str) -> None:
+        """Read every line of the file, then check the whole map.
+
+        The file is opened through a context manager, and an unreadable
+        or non-text file is reported instead of raising.
+        """
         try:
             with open(parse_file, 'r', encoding="utf-8") as file:
                 content = file.read()
@@ -60,6 +78,11 @@ class MapParsing:
         self.get_map().validate()
 
     def parse_line(self) -> None:
+        """Dispatch the current line to the parser its prefix calls for.
+
+        Blank lines and comments are ignored, and nothing may come
+        before the drone count.
+        """
         raw = self.__current_line.raw
         if raw == "" or raw.startswith('#'):
             return
@@ -79,6 +102,7 @@ class MapParsing:
             raise self.error("invalid configuration")
 
     def parse_nb_drones(self) -> None:
+        """Read the size of the fleet, which is only declared once."""
         if self.__drones_defined:
             raise self.error("nb_drones is defined twice")
 
@@ -88,6 +112,11 @@ class MapParsing:
         self.__drones_defined = True
 
     def parse_point(self) -> None:
+        """Read a zone line and add the zone it describes to the map.
+
+        Checks the kind, the name, the uniqueness of both the name and
+        the position, the coordinates and the metadata block.
+        """
         raw = self.__current_line.raw
         result = parse.parse("{type}: {name} {x} {y} [{metadata}]", raw)
         if result is None:
@@ -127,6 +156,10 @@ class MapParsing:
 
     def parse_metadata(self, point_type: PointType,
                        meta_datas_raw: str) -> tuple[Zone, Color, int]:
+        """Read the metadata of a zone, filling in the defaults.
+
+        Returns its kind, its color and how many drones it can hold.
+        """
         values = self.parse_metadata_block(meta_datas_raw,
                                            self.ZONE_METADATA)
 
@@ -176,6 +209,11 @@ class MapParsing:
         return values
 
     def parse_connection(self) -> None:
+        """Read a connection line and link the two zones it names.
+
+        Both zones must already exist, a zone cannot be linked to
+        itself, and the same pair cannot be linked twice.
+        """
         raw = self.__current_line.raw
         result = parse.parse("connection: {a}-{b} [{metadata}]", raw)
         if result is None:
@@ -216,6 +254,11 @@ class MapParsing:
         return value
 
     def parse_name(self, name: str) -> str:
+        """Return a zone name, refusing the characters that break it.
+
+        A dash would make a connection line ambiguous, and spaces and
+        brackets would break the syntax of a zone line.
+        """
         if name == "" or any(char in name
                              for char in self.FORBIDDEN_IN_NAMES):
             raise self.error(f"invalid zone name '{name}' (dashes, spaces "
@@ -223,6 +266,7 @@ class MapParsing:
         return name
 
     def find_point(self, name: str) -> Point:
+        """Return the zone with that name, or refuse the line."""
         point = self.get_map().get_point_from_name(name)
         if point is None:
             raise self.error(f"unknown zone '{name}' (zones must be "
@@ -230,12 +274,18 @@ class MapParsing:
         return point
 
     def parse_int(self, value: str, what: str) -> int:
+        """Return a value read as an integer, sign included.
+
+        int() alone would accept underscores and non-ASCII digits, so
+        the text is checked before being converted.
+        """
         digits = value[1:] if value[:1] in "+-" else value
         if not (digits.isascii() and digits.isdecimal()):
             raise self.error(f"{what} must be an integer, got '{value}'")
         return int(value)
 
     def parse_positive_int(self, value: str, what: str) -> int:
+        """Return a value read as an integer greater than zero."""
         number = self.parse_int(value, what)
         if number <= 0:
             raise self.error(f"{what} must be a positive integer, "
