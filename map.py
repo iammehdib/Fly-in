@@ -19,9 +19,10 @@ class Map:
     def get_round(self) -> int:
         return self.__round
 
-    def add_round(self, add_round: int = 1) -> None:
+    def add_round_and_get(self, add_round: int = 1) -> int:
         """Move the simulation clock forward."""
         self.__round += add_round
+        return self.__round
 
     def validate(self) -> None:
         """Check the rules that only make sense on the whole map.

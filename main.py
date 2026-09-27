@@ -2,6 +2,7 @@ import sys
 
 from map import MapException
 from parsing import MapParsing, MapParsingException
+from simulation import Simulation
 
 
 def main() -> int:
@@ -9,16 +10,17 @@ def main() -> int:
         print("usage: python main.py <map_file>")
         return 1
     try:
-        drone_map = MapParsing(sys.argv[1]).get_map()
+        map = MapParsing(sys.argv[1]).get_map()
+        map.start()
+        turns = Simulation(map).run()
     except (MapParsingException, MapException) as map_error:
         print(f"Error: {map_error}")
         return 1
 
-    drone_map.start()
-
-    for path in drone_map.solve():
-        print(drone_map.path_cost(path),
-              " -> ".join(point.display_name() for point in path))
+    print("\n".join(turns))
+    fleet = map.get_drone_count()
+    drones = "drone" if fleet == 1 else "drones"
+    print(f"\n{len(turns)} turns for {fleet} {drones}")
     return 0
 
 
