@@ -335,30 +335,26 @@ Documentation and articles used:
 
 ### Use of AI
 
-AI (Claude Code) was used as an assistant, on clearly delimited tasks,
-and every suggestion was reviewed, tested and reworked before being
-kept:
+The parser, the class design and the way the project is organised are
+mine: the two-step validation (line by line, then the whole map), the
+split between `Map`, `Point`, `Drone`, `Scheduler` and `Simulation`,
+and the data each class owns.
 
-- **Reading the subject back to me.** Checking my implementation
-  against each requirement of the PDF, in particular the parser
-  constraints and the turn mechanics.
-- **Reviewing the engine and the scheduler.** The turn ordering and the
-  deadlock-free rule were discussed with it; the first version it
-  produced had two real bugs I would not have caught alone: a drone
-  landing from a flight could move again during the same turn, and a
-  drone landing freed its connection one turn too early, which let a
-  second drone cross a connection of capacity 1.
-- **Writing an independent output checker.** A throwaway script,
-  deliberately not part of the project, that replays the program's
-  output and verifies every rule (connections, zone and connection
-  capacities, blocked zones, one move per drone per turn, every drone
-  delivered). That is what found the two bugs above.
-- **Cleaning up.** Finding the code no module called any more, the
-  missing escape character that made the colors print as raw text, and
-  the Makefile rules that still pointed at another project.
-- **Rewording.** This README and the commit messages were drafted with
-  it and edited by me.
+AI (Claude Code) was used on three kinds of task:
 
-The parser, the data model and the overall design are mine. AI was not
-used to produce code I cannot explain: everything in this repository is
-code I can walk through and justify.
+- **Speeding up code I had already designed.** Writing out repetitive
+  parts from a structure I had decided on, such as the metadata
+  reading and the colour table, and tightening wording in the
+  docstrings and the commit messages.
+- **Finding edge cases to break the parser.** This is where it was most
+  useful: generating unusual inputs I had not thought of — non-ASCII
+  digits in `nb_drones`, an unclosed metadata bracket, a zone named
+  like a keyword, CRLF line endings, a binary file, a directory passed
+  as the argument. The custom maps in `maps/custom/` come from that
+  work.
+- **Checking the implementation against the subject**, requirement by
+  requirement, and replaying the simulation output against the
+  movement and capacity rules to confirm it holds.
+
+Everything kept was reviewed and tested, and the code in this
+repository is code I can walk through and justify.
