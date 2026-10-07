@@ -32,70 +32,42 @@ class Zone(str, Enum):
 class Color(str, Enum):
     """A terminal color a zone can be displayed with."""
 
-    UNDEFINED = "none"
-    BLACK = "black"
-    GRAY = "gray"
-    RED = "red"
-    DARK_RED = "darkred"
-    ORANGE = "orange"
-    GREEN = "green"
-    LIME = "lime"
-    BLUE = "blue"
-    CYAN = "cyan"
-    PURPLE = "purple"
-    MAGENTA = "magenta"
-    VIOLET = "violet"
-    CRIMSON = "crimson"
-    RAINBOW = "rainbow"
-    BROWN = "brown"
-    MAROON = "maroon"
-    YELLOW = "yellow"
-    GOLD = "gold"
-    WHITE = "white"
+    rgb: str
+
+    UNDEFINED = ("none", "")
+    BLACK = ("black", "0;0;0")
+    GRAY = ("gray", "128;128;128")
+    RED = ("red", "255;0;0")
+    DARK_RED = ("darkred", "139;0;0")
+    ORANGE = ("orange", "255;165;0")
+    GREEN = ("green", "0;160;0")
+    LIME = ("lime", "50;255;50")
+    BLUE = ("blue", "0;80;255")
+    CYAN = ("cyan", "0;255;255")
+    PURPLE = ("purple", "128;0;128")
+    MAGENTA = ("magenta", "255;0;255")
+    VIOLET = ("violet", "238;130;238")
+    CRIMSON = ("crimson", "220;20;60")
+    RAINBOW = ("rainbow", "")
+    BROWN = ("brown", "165;42;42")
+    MAROON = ("maroon", "128;0;0")
+    YELLOW = ("yellow", "255;255;0")
+    GOLD = ("gold", "255;215;0")
+    WHITE = ("white", "255;255;255")
+
+    def __new__(cls, name: str, rgb: str = "") -> "Color":
+        """Build a member whose value is its name, carrying its rgb."""
+        member = str.__new__(cls, name)
+        member._value_ = name
+        member.rgb = rgb
+        return member
 
     @property
     def ansi(self) -> str:
         """Return the escape sequence painting text in this color."""
-        color: str = "\033[38;2;"
-        if self is Color.BLACK:
-            color += "0;0;0m"
-        elif self is Color.GRAY:
-            color += "128;128;128m"
-        elif self is Color.RED:
-            color += "255;0;0m"
-        elif self is Color.DARK_RED:
-            color += "139;0;0m"
-        elif self is Color.ORANGE:
-            color += "255;165;0m"
-        elif self is Color.GREEN:
-            color += "0;160;0m"
-        elif self is Color.LIME:
-            color += "50;255;50m"
-        elif self is Color.BLUE:
-            color += "0;80;255m"
-        elif self is Color.CYAN:
-            color += "0;255;255m"
-        elif self is Color.PURPLE:
-            color += "128;0;128m"
-        elif self is Color.MAGENTA:
-            color += "255;0;255m"
-        elif self is Color.VIOLET:
-            color += "238;130;238m"
-        elif self is Color.CRIMSON:
-            color += "220;20;60m"
-        elif self is Color.BROWN:
-            color += "165;42;42m"
-        elif self is Color.MAROON:
-            color += "128;0;0m"
-        elif self is Color.YELLOW:
-            color += "255;255;0m"
-        elif self is Color.GOLD:
-            color += "255;215;0m"
-        elif self is Color.WHITE:
-            color += "255;255;255m"
-        else:
+        if self.rgb == "":
             return ""
-        return color
+        return "[38;2;" + self.rgb + "m"
 
     def colorize(self, text: str) -> str:
         """Return the text wrapped in this color, unchanged if unknown."""
