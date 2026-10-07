@@ -3,11 +3,7 @@ from models import Point, Zone
 
 
 class Scheduler:
-    """Choose the route every drone of the fleet will follow.
-
-    The routes are picked once, before the first turn: the map never
-    changes, so replanning during the simulation would only cost time.
-    """
+    """Choose the route every drone of the fleet will follow."""
 
     def __init__(self, map: Map) -> None:
         """Start a scheduler on a map, with nothing booked yet."""
@@ -28,15 +24,9 @@ class Scheduler:
         self.deal_drones(routes)
 
     def pick_routes(self) -> list[list[Point]]:
-        """Keep the cheapest routes that can all be flown at once.
-
-        Two drones whose routes fight over the same zone can each hold
-        what the other waits for, and neither moves again. A route is
-        only kept when every zone and every connection it borrows still
-        has a free slot for it: each route then owns a slot all along
-        its way, so its drones always move forward and no deadlock can
-        happen. The hubs are left out, they hold the whole fleet.
-        """
+        """Keep the cheapest routes that can all be flown at once."""
+        # Each kept route owns a slot in every zone and link it
+        # uses, so its drones always move forward: no deadlock.
         self.__zone_load = {}
         self.__link_load = {}
 
@@ -56,12 +46,7 @@ class Scheduler:
 
     @staticmethod
     def rank(path: list[Point]) -> tuple[int, int]:
-        """Rank a path by its cost, then by the priority zones it uses.
-
-        A priority zone costs one turn, exactly like a normal one, so
-        preferring it can never make a route slower: it only settles
-        which of two equally fast paths is kept and flown.
-        """
+        """Rank a path by its cost, then by the priority zones it uses."""
         priority = 0
         for point in path[1:-1]:
             if point.get_zone() is Zone.PRIORITY:
@@ -98,12 +83,7 @@ class Scheduler:
         return self.__link_load.get(self.link_key(point_a, point_b), 0)
 
     def deal_drones(self, routes: list[list[Point]]) -> None:
-        """Send each drone on the route that will deliver it first.
-
-        A route already carrying drones makes the next one wait behind
-        them, so its queue is added to its cost: a long empty route can
-        beat a short crowded one.
-        """
+        """Send each drone on the route that will deliver it first."""
         load: list[int] = []
         for _ in routes:
             load.append(0)

@@ -26,13 +26,7 @@ class MapParsingException(Exception):
 
 
 class MapParsing:
-    """Read a map file and build the map it describes.
-
-    Parsing and validation happen together, line by line: everything a
-    single line can get wrong is refused here, with its number and its
-    cause. What only the finished map can tell is left to
-    Map.validate().
-    """
+    """Read a map file and build the map it describes."""
 
     ZONE_METADATA = ("zone", "color", "max_drones")
     CONNECTION_METADATA = ("max_link_capacity",)
@@ -54,11 +48,7 @@ class MapParsing:
         return MapParsingException(self.__current_line, reason)
 
     def parse_file(self, parse_file: str) -> None:
-        """Read every line of the file, then check the whole map.
-
-        The file is opened through a context manager, and an unreadable
-        or non-text file is reported instead of raising.
-        """
+        """Read every line of the file, then check the whole map."""
         try:
             with open(parse_file, 'r', encoding="utf-8") as file:
                 content = file.read()
@@ -78,11 +68,7 @@ class MapParsing:
         self.get_map().validate()
 
     def parse_line(self) -> None:
-        """Dispatch the current line to the parser its prefix calls for.
-
-        Blank lines and comments are ignored, and nothing may come
-        before the drone count.
-        """
+        """Dispatch the current line to the parser its prefix calls for."""
         raw = self.__current_line.raw
         if raw == "" or raw.startswith('#'):
             return
@@ -112,11 +98,7 @@ class MapParsing:
         self.__drones_defined = True
 
     def parse_point(self) -> None:
-        """Read a zone line and add the zone it describes to the map.
-
-        Checks the kind, the name, the uniqueness of both the name and
-        the position, the coordinates and the metadata block.
-        """
+        """Read a zone line and add the zone it describes to the map."""
         raw = self.__current_line.raw
         result = parse.parse("{type}: {name} {x} {y} [{metadata}]", raw)
         if result is None:
@@ -156,10 +138,7 @@ class MapParsing:
 
     def parse_metadata(self, point_type: PointType,
                        meta_datas_raw: str) -> tuple[Zone, Color, int]:
-        """Read the metadata of a zone, filling in the defaults.
-
-        Returns its kind, its color and how many drones it can hold.
-        """
+        """Read the metadata of a zone, filling in the defaults."""
         values = self.parse_metadata_block(meta_datas_raw,
                                            self.ZONE_METADATA)
 
@@ -209,11 +188,7 @@ class MapParsing:
         return values
 
     def parse_connection(self) -> None:
-        """Read a connection line and link the two zones it names.
-
-        Both zones must already exist, a zone cannot be linked to
-        itself, and the same pair cannot be linked twice.
-        """
+        """Read a connection line and link the two zones it names."""
         raw = self.__current_line.raw
         result = parse.parse("connection: {a}-{b} [{metadata}]", raw)
         if result is None:
@@ -243,22 +218,14 @@ class MapParsing:
         point_b.add_connection(point_a, max_link_capacity)
 
     def field(self, result: parse.Result, key: str) -> str:
-        """Return a captured field, refusing an unexpected extra token.
-
-        A '{}' field of parse swallows everything, spaces included, so a
-        space inside it means the line holds one token too many.
-        """
+        """Return a captured field, refusing an unexpected extra token."""
         value = str(result[key])
         if " " in value:
             raise self.error(f"unexpected token in '{value}'")
         return value
 
     def parse_name(self, name: str) -> str:
-        """Return a zone name, refusing the characters that break it.
-
-        A dash would make a connection line ambiguous, and spaces and
-        brackets would break the syntax of a zone line.
-        """
+        """Return a zone name, refusing the characters that break it."""
         if name == "" or any(char in name
                              for char in self.FORBIDDEN_IN_NAMES):
             raise self.error(f"invalid zone name '{name}' (dashes, spaces "
@@ -274,11 +241,7 @@ class MapParsing:
         return point
 
     def parse_int(self, value: str, what: str) -> int:
-        """Return a value read as an integer, sign included.
-
-        int() alone would accept underscores and non-ASCII digits, so
-        the text is checked before being converted.
-        """
+        """Return a value read as an integer, sign included."""
         digits = value[1:] if value[:1] in "+-" else value
         if not (digits.isascii() and digits.isdecimal()):
             raise self.error(f"{what} must be an integer, got '{value}'")

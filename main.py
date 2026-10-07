@@ -6,11 +6,7 @@ from simulation import Simulation
 
 
 def main() -> int:
-    """Read the map given as argument and fly the fleet on it.
-
-    Returns the exit code: 1 on a wrong usage or an invalid map, whose
-    cause is printed, 0 once the simulation ran.
-    """
+    """Read the map given as argument and fly the fleet on it."""
     if len(sys.argv) != 2:
         print("usage: python main.py <map_file>")
         return 1

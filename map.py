@@ -11,12 +11,7 @@ class MapException(Exception):
 
 
 class Map:
-    """The network of zones, the fleet flying in it and its clock.
-
-    The map owns every zone and every drone: the parser fills it, the
-    scheduler reads it to plan the routes, and the simulation moves the
-    drones inside it.
-    """
+    """The network of zones, the fleet flying in it and its clock."""
 
     def __init__(self) -> None:
         """Start an empty map, with no zone and no drone."""
@@ -35,11 +30,7 @@ class Map:
         return self.__round
 
     def validate(self) -> None:
-        """Check the rules that only make sense on the whole map.
-
-        Called once the file is fully parsed: none of these errors can
-        be attached to a particular line.
-        """
+        """Check the rules that only make sense on the whole map."""
         if self.get_drone_count() <= 0:
             raise MapException("nb_drones must be a positive integer")
         if self.count_type(PointType.START) != 1:
@@ -84,12 +75,7 @@ class Map:
         start_point.add_drones(self.__drones)
 
     def link_usage(self, point_a: Point, point_b: Point) -> int:
-        """Count the drones currently flying on a connection.
-
-        Connections are stored on both of their zones, so the drones
-        themselves are the single source of truth for the occupancy
-        checked against max_link_capacity.
-        """
+        """Count the drones currently flying on a connection."""
         usage = 0
         for drone in self.get_drones():
             if drone.is_on_link(point_a, point_b):
@@ -98,11 +84,7 @@ class Map:
 
     def find_paths(self, point: Point, end: Point,
                    path: list[Point]) -> list[list[Point]]:
-        """Return every route from a zone to the end hub.
-
-        Depth-first search: a zone already in the path is skipped, so no
-        route ever loops, and a blocked zone is never entered.
-        """
+        """Return every route from a zone to the end hub."""
         if point is end:
             return [path]
 
@@ -120,11 +102,7 @@ class Map:
 
     @staticmethod
     def path_cost(path: list[Point]) -> int:
-        """Return how many turns flying a whole path takes.
-
-        The start hub is left out: a drone is already there, only the
-        zones it enters cost turns.
-        """
+        """Return how many turns flying a whole path takes."""
         cost = 0
         for point in path[1:]:
             cost += point.get_zone().turns

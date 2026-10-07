@@ -120,12 +120,7 @@ class Color(str, Enum):
 
 
 class Drone:
-    """A drone, its position on the map and the route it follows.
-
-    A drone is either inside a zone (get_point) or flying on the
-    connection toward a restricted zone (is_in_transit), never both:
-    leaving a zone frees its capacity at once.
-    """
+    """A drone, its position on the map and the route it follows."""
 
     def __init__(self, drone_id: int) -> None:
         """Create a drone, outside of any zone and with no route yet."""
@@ -177,11 +172,7 @@ class Drone:
 
     def start_transit(self, origin: "Point", destination: "Point",
                       turns: int) -> None:
-        """Send the drone on the connection joining two zones.
-
-        The remaining turns are spent on the connection, where the
-        subject forbids the drone to wait for a free slot.
-        """
+        """Send the drone on the connection joining two zones."""
         self.__transit_from = origin
         self.__transit_to = destination
         self.__transit_turns = turns
@@ -211,11 +202,7 @@ class Drone:
         self.__transit_turns = 0
 
     def is_on_link(self, point_a: "Point", point_b: "Point") -> bool:
-        """Return True when the drone flies on that connection.
-
-        Connections are bidirectional, so the two zones are compared
-        without taking the direction of the flight into account.
-        """
+        """Return True when the drone flies on that connection."""
         if self.__transit_from is None or self.__transit_to is None:
             return False
         if self.__transit_from is point_a and self.__transit_to is point_b:
@@ -283,22 +270,13 @@ class Point:
         return self.__zone.turns
 
     def free_slots(self) -> int:
-        """Return how many more drones this zone can take right now.
-
-        The start and end hubs have no limit. The slots already booked
-        for the current turn by reserve are deducted.
-        """
+        """Return how many more drones this zone can take right now."""
         if self.__type is not PointType.HUB:
             return sys.maxsize
         return self.__max_drones - len(self.__drones) - self.__incoming
 
     def reserve(self) -> bool:
-        """Book a slot for a drone entering during this turn.
-
-        Booking every arrival before moving anybody is what lets several
-        drones leave and enter the same zone on the same turn without
-        ever exceeding its capacity. False when the zone is full.
-        """
+        """Book a slot for a drone entering during this turn."""
         if self.free_slots() <= 0:
             return False
         self.__incoming += 1
@@ -335,11 +313,7 @@ class Point:
 
     def add_connection(self, point: "Point",
                        max_link_capacity: int = 1) -> None:
-        """Link this zone to another one, one way.
-
-        The parser calls it on both zones, since a connection of the map
-        file goes both ways.
-        """
+        """Link this zone to another one, one way."""
         self.__connections.append(point)
         self.__max_link[point] = max_link_capacity
 

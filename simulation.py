@@ -1,15 +1,10 @@
 from map import Map, MapException
-from models import Drone, Point
+from models import Drone, Point, PointType
 from scheduler import Scheduler
 
 
 class Simulation:
-    """Fly the whole fleet from the start hub to the end hub.
-
-    The simulation walks the map turn by turn: a drone either steps into
-    the next zone of its route, takes off toward a restricted zone and
-    spends the extra turn on the connection, or waits.
-    """
+    """Fly the whole fleet from the start hub to the end hub."""
 
     def __init__(self, map: Map) -> None:
         """Start a simulation on a map, before its first turn."""
@@ -52,12 +47,7 @@ class Simulation:
         return True
 
     def play_turn(self) -> list[str]:
-        """Play one turn and return what each moving drone did.
-
-        The drones already flying are served first: landing frees the
-        connection they were on and fills the zone they land in before
-        anybody else asks to move.
-        """
+        """Play one turn and return what each moving drone did."""
         self.__landed = []
         self.__crossings = {}
 
@@ -67,11 +57,7 @@ class Simulation:
         return moves
 
     def land_flying_drones(self) -> list[str]:
-        """Give one more turn to the drones already on a connection.
-
-        Their slot was booked when they took off, so they always land on
-        time: the subject forbids waiting on a connection.
-        """
+        """Give one more turn to the drones already on a connection."""
         moves: list[str] = []
         for drone in self.get_map().get_drones():
             if not drone.is_in_transit():
@@ -84,13 +70,9 @@ class Simulation:
 
     def land(self, drone: Drone) -> str:
         """Put a drone that flew its last turn into its destination."""
-        origin = drone.get_transit_from()
         destination = drone.get_transit_to()
-        if origin is None or destination is None:
+        if destination is None:
             return ""
-        # It was still flying during this very turn, so it keeps the
-        # connection busy until the end of it.
-        self.use_link(origin, destination)
         drone.end_transit()
         destination.add_drone(drone)
         drone.advance()
@@ -98,11 +80,9 @@ class Simulation:
         return self.describe(drone, destination.display_name())
 
     def move_waiting_drones(self) -> list[str]:
-        """Step every drone that can enter the next zone of its route.
-
-        The drones closest to the end hub are served first: leaving a
-        zone frees it for the drone behind during the same turn.
-        """
+        """Step every drone that can enter the next zone of its route."""
+        # Closest to the end hub first: a zone freed this turn is
+        # reusable by the drone behind during that same turn.
         moves: list[str] = []
         for drone in self.sorted_drones():
             if not self.owes_a_move(drone):
@@ -130,11 +110,7 @@ class Simulation:
 
     def take_off(self, drone: Drone, point: Point,
                  destination: Point) -> str:
-        """Send a drone flying toward a restricted zone.
-
-        It leaves its zone at once, which frees a slot, and books the
-        one it will land in, since it cannot wait on the connection.
-        """
+        """Send a drone flying toward a restricted zone."""
         destination.reserve()
         point.remove_drone(drone)
         drone.start_transit(point, destination, destination.entry_cost() - 1)
@@ -147,21 +123,31 @@ class Simulation:
         return self.describe(drone, destination.display_name())
 
     def can_enter(self, point: Point, destination: Point) -> bool:
-        """Return True when a drone may leave a zone for the next one.
-
-        Both capacities are checked: the room left in the destination,
-        which already counts the drones flying toward it, and the
-        connection, shared by the drones in transit and the ones
-        crossing it during this very turn.
-        """
+        """Return True when a drone may leave a zone for the next one."""
         if not destination.get_zone().is_passable:
             return False
-        if destination.free_slots() <= 0:
+        if destination.entry_cost() > 1:
+            if not self.has_room_on_arrival(destination):
+                return False
+        elif destination.free_slots() <= 0:
             return False
 
         used = self.get_map().link_usage(point, destination)
         used += self.link_crossings(point, destination)
         return used < point.get_link_capacity(destination)
+
+    def has_room_on_arrival(self, destination: Point) -> bool:
+        """Return True when a drone taking off now will have a slot."""
+        # The drone lands next turn, once whoever stands in the
+        # zone, ahead of it on the same route, has moved on.
+        if destination.get_type() is not PointType.HUB:
+            return True
+
+        incoming = 0
+        for drone in self.get_map().get_drones():
+            if drone.get_transit_to() is destination:
+                incoming += 1
+        return incoming < destination.get_max_drones()
 
     def use_link(self, point_a: Point, point_b: Point) -> None:
         """Record that one more drone flies on a connection this turn."""
